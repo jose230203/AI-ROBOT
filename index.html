@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Robot Prolog</title>
+<!-- Intenta cargar Tau Prolog desde CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tau-prolog/0.3.4/tau-prolog.min.js"></script>
+<style>
+:root{--bg:#f4f6fb;--card:#fff;--ink:#1c2333;--mut:#667;--acc:#3b6cf6;--line:#dde2ee;--code:#f0f3fa;--ok:#12805c;--bad:#c0392b;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1420;--card:#192034;--ink:#e8ecf7;--mut:#99a3bd;--acc:#7a9cff;--line:#2a3350;--code:#10162a;--ok:#4fd1a1;--bad:#ff7b6b}}
+:root[data-theme="dark"]{--bg:#0f1420;--card:#192034;--ink:#e8ecf7;--mut:#99a3bd;--acc:#7a9cff;--line:#2a3350;--code:#10162a;--ok:#4fd1a1;--bad:#ff7b6b}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.45}
+main{max-width:980px;margin:0 auto;padding:16px}
+h1{font-size:1.5rem;margin:.2em 0}
+p.sub{color:var(--mut);margin:0 0 14px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:760px){.grid{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px}
+.card h2{font-size:1rem;margin:0 0 8px}
+#stage{position:relative;height:300px;border-radius:12px;overflow:hidden;background:linear-gradient(var(--code),var(--card));border:1px solid var(--line)}
+#floor{position:absolute;left:0;right:0;bottom:0;height:34px;background:var(--line)}
+#robot{position:absolute;bottom:26px;left:50%;width:140px;margin-left:-70px;will-change:transform}
+#robot svg{width:140px;height:230px;overflow:visible}
+#stage .zzz{position:absolute;top:20px;font-size:1.6rem;opacity:0;pointer-events:none}
+textarea{width:100%;height:330px;font:12.5px/1.45 ui-monospace,Menlo,Consolas,monospace;background:var(--code);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:10px;resize:vertical}
+input[type=text]{flex:1;min-width:0;font:inherit;padding:9px 10px;border-radius:10px;border:1px solid var(--line);background:var(--code);color:var(--ink)}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--card);color:var(--ink);padding:7px 11px;border-radius:10px}
+button:hover{border-color:var(--acc)}
+button.p{background:var(--acc);border-color:var(--acc);color:#fff}
+.row{display:flex;gap:8px;margin-top:10px}
+#btns{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+#log{height:150px;overflow:auto;background:var(--code);border-radius:10px;padding:8px 10px;font:12.5px/1.5 ui-monospace,Menlo,Consolas,monospace;margin-top:10px}
+#log .q{color:var(--acc)} #log .ok{color:var(--ok)} #log .no{color:var(--bad)}
+small{color:var(--mut)}
+</style>
+</head>
+<body>
+<main>
+<h1>🤖 Robot controlado por Prolog</h1>
+<p class="sub">El robot reconoce cada instrucción mediante hechos y reglas de Prolog y ejecuta el movimiento correspondiente.</p>
+
+<div class="grid">
+  <section class="card">
+    <h2>Escenario</h2>
+    <div id="stage">
+      <div id="floor"></div>
+      <div class="zzz" id="zzz">💤</div>
+      <div id="robot">
+        <svg viewBox="0 0 140 230" aria-label="Robot">
+          <g id="head" style="transform-origin:70px 70px">
+            <line x1="70" y1="12" x2="70" y2="26" stroke="#8a93a8" stroke-width="4"/>
+            <circle id="bulb" cx="70" cy="10" r="7" fill="#f5c542"/>
+            <rect x="32" y="26" width="76" height="62" rx="14" fill="#5b7cfa"/>
+            <rect x="40" y="38" width="60" height="30" rx="8" fill="#dfe8ff"/>
+            <g id="eyes" style="transform-origin:70px 53px">
+              <circle cx="56" cy="53" r="7" fill="#1c2333"/><circle cx="84" cy="53" r="7" fill="#1c2333"/>
+              <circle cx="58" cy="50" r="2" fill="#fff"/><circle cx="86" cy="50" r="2" fill="#fff"/>
+            </g>
+            <rect x="55" y="74" width="30" height="6" rx="3" fill="#dfe8ff"/>
+          </g>
+          <rect x="60" y="88" width="20" height="8" fill="#8a93a8"/>
+          <g id="body" style="transform-origin:70px 150px">
+            <rect x="34" y="96" width="72" height="68" rx="12" fill="#3b4a7a"/>
+            <circle cx="70" cy="130" r="12" fill="#f5c542"/><circle cx="70" cy="130" r="5" fill="#fff6d6"/>
+            <g id="armL" style="transform-origin:34px 106px"><rect x="14" y="102" width="20" height="50" rx="9" fill="#5b7cfa"/><circle cx="24" cy="156" r="8" fill="#8a93a8"/></g>
+            <g id="armR" style="transform-origin:106px 106px"><rect x="106" y="102" width="20" height="50" rx="9" fill="#5b7cfa"/><circle cx="116" cy="156" r="8" fill="#8a93a8"/></g>
+            <rect x="44" y="164" width="18" height="44" rx="7" fill="#5b7cfa"/><rect x="78" y="164" width="18" height="44" rx="7" fill="#5b7cfa"/>
+            <rect x="38" y="205" width="30" height="14" rx="6" fill="#1c2333"/><rect x="72" y="205" width="30" height="14" rx="6" fill="#1c2333"/>
+          </g>
+        </svg>
+      </div>
+    </div>
+    <div id="btns"></div>
+    <div class="row">
+      <input type="text" id="cmd" placeholder="Escribe: avanzar, saltar, rutina_show ..." autocomplete="off">
+      <button class="p" id="go">Ejecutar</button>
+    </div>
+    <small>Puedes encadenar con comas o espacios: <code>avanzar, saltar, hola</code>.</small>
+    <div id="log"></div>
+  </section>
+
+  <section class="card">
+    <h2>Programa Prolog (editable)</h2>
+    <textarea id="prog" spellcheck="false"></textarea>
+    <div class="row"><button class="p" id="reload">Cargar programa</button><button id="reset">Restaurar</button></div>
+    <small>Hechos y reglas en sintaxis Prolog.</small>
+  </section>
+</div>
+</main>
+
+<script>
+const PROGRAMA = `% ===== HECHOS: comando(Nombre, Accion, Parametro) =====
+comando(avanzar, mover, 70).
+comando(retroceder, mover, -70).
+comando(saltar, saltar, 70).
+comando(saludar, saludar, 4).
+comando(bailar, bailar, 6).
+comando(girar_cabeza, girar_cabeza, 35).
+comando(parpadear, parpadear, 3).
+comando(encender_luz, luz, 1).
+comando(apagar_luz, luz, 0).
+comando(dormir, dormir, 1).
+comando(despertar, dormir, 0).
+
+% ===== HECHOS: sinonimos =====
+sinonimo(adelante, avanzar).
+sinonimo(derecha, avanzar).
+sinonimo(atras, retroceder).
+sinonimo(izquierda, retroceder).
+sinonimo(brincar, saltar).
+sinonimo(hola, saludar).
+sinonimo(bailar_ya, bailar).
+
+% ===== HECHOS: rutinas paso(Rutina, Orden, Comando) =====
+paso(rutina_show, 1, saludar).
+paso(rutina_show, 2, avanzar).
+paso(rutina_show, 3, bailar).
+paso(rutina_show, 4, saltar).
+paso(rutina_show, 5, retroceder).
+paso(rutina_show, 6, parpadear).
+paso(rutina_sueno, 1, apagar_luz).
+paso(rutina_sueno, 2, dormir).
+paso(rutina_despertar, 1, despertar).
+paso(rutina_despertar, 2, encender_luz).
+paso(rutina_despertar, 3, saludar).
+
+% ===== REGLAS =====
+ejecutar(C, A, P) :- comando(C, A, P).
+ejecutar(C, A, P) :- sinonimo(C, Real), comando(Real, A, P).
+`;
+const $ = id => document.getElementById(id);
+let session = null, queue = Promise.resolve(), x = 0, sleeping = false, usaRespaldo = false;
+
+function log(t, cls){ const d=document.createElement('div'); if(cls)d.className=cls; d.textContent=t; $('log').appendChild(d); $('log').scrollTop=1e9; }
+const val = t => (t && (t.id !== undefined ? t.id : t.value));
+
+function cargar(){
+  return new Promise(res=>{
+    if(typeof window.pl === 'undefined'){
+      console.warn("Tau-Prolog no cargó por restricción de red/archivo local. Activando motor de respaldo Prolog.");
+      usaRespaldo = true;
+      log('⚠ Modo local/respaldo activado (Interpretador Prolog emulado).','ok');
+      res(true);
+      return;
+    }
+    usaRespaldo = false;
+    session = pl.create(1000);
+    session.consult($('prog').value,{
+      success(){ log('✔ Programa Prolog cargado (Tau-Prolog).','ok'); res(true); },
+      error(e){ log('✖ Error en el programa: '+e,'no'); res(false); }
+    });
+  });
+}
+
+function solveAllLocal(goalText){
+  // Motor evaluador local basado en texto (en caso de restricciones file:///)
+  const textoProg = $('prog').value;
+  const out = [];
+  
+  if(goalText.startsWith('comando(')){
+    const match = goalText.match(/comando\(([^,]+),\s*([^,]+),\s*([^)]+)\)\./);
+    if(match){
+      const buscN = match[1].trim();
+      const lineas = textoProg.split('\n');
+      lineas.forEach(l => {
+        const m = l.match(/comando\s*\(\s*([a-z0-9_]+)\s*,\s*([a-z0-9_]+)\s*,\s*([-\d]+)\s*\)\s*\./);
+        if(m && (buscN === 'N' || m[1] === buscN)){
+          out.push({ lookup: (k) => k==='N'?{id:m[1]}:k==='A'?{id:m[2]}:k==='P'?{id:parseInt(m[3])}:null });
+        }
+      });
+    }
+  } else if(goalText.startsWith('paso(')){
+    const match = goalText.match(/paso\(([^,]+),\s*([^,]+),\s*([^)]+)\)\./);
+    if(match){
+      const buscR = match[1].trim();
+      const buscN = match[2].trim();
+      const lineas = textoProg.split('\n');
+      lineas.forEach(l => {
+        const m = l.match(/paso\s*\(\s*([a-z0-9_]+)\s*,\s*(\d+)\s*,\s*([a-z0-9_]+)\s*\)\s*\./);
+        if(m && (buscR === 'R' || m[1] === buscR) && (buscN === 'N' || m[2] === buscN)){
+          out.push({ lookup: (k) => k==='R'?{id:m[1]}:k==='N'?{id:parseInt(m[2])}:k==='C'?{id:m[3]}:null });
+        }
+      });
+    }
+  } else if(goalText.startsWith('ejecutar(')){
+    const match = goalText.match(/ejecutar\(([^,]+),\s*A,\s*P\)\./);
+    if(match){
+      const token = match[1].trim();
+      const lineas = textoProg.split('\n');
+      let cmdReal = token;
+      
+      // Buscar si es sinónimo
+      lineas.forEach(l => {
+        const ms = l.match(/sinonimo\s*\(\s*([a-z0-9_]+)\s*,\s*([a-z0-9_]+)\s*\)\s*\./);
+        if(ms && ms[1] === token) cmdReal = ms[2];
+      });
+
+      // Buscar comando
+      lineas.forEach(l => {
+        const mc = l.match(/comando\s*\(\s*([a-z0-9_]+)\s*,\s*([a-z0-9_]+)\s*,\s*([-\d]+)\s*\)\s*\./);
+        if(mc && mc[1] === cmdReal){
+          out.push({ lookup: (k) => k==='A'?{id:mc[2]}:k==='P'?{id:parseInt(mc[3])}:null });
+        }
+      });
+    }
+  }
+  return { out };
+}
+
+function solveAll(goal){
+  if(usaRespaldo){
+    return Promise.resolve(solveAllLocal(goal));
+  }
+  return new Promise(res=>{
+    const out=[];
+    function next(){ session.answer({
+      success(a){ out.push(a); next(); },
+      fail(){ res({out}); }, limit(){ res({out}); }, error(e){ res({out,err:e}); } }); }
+    session.query(goal,{ success(){ next(); }, error(e){ res({out,err:e}); } });
+  });
+}
+
+const ok = s => /^[a-z][a-z0-9_]*$/.test(s);
+
+async function construirBotones(){
+  const r = await solveAll('comando(N,_,_).');
+  $('btns').innerHTML='';
+  r.out.forEach(a=>{ const n=val(a.lookup('N')); const b=document.createElement('button'); b.textContent=n; b.onclick=()=>lanzar(n); $('btns').appendChild(b); });
+  const rr = await solveAll('paso(R,1,_).');
+  rr.out.forEach(a=>{ const n=val(a.lookup('R')); const b=document.createElement('button'); b.textContent='▶ '+n; b.className='p'; b.onclick=()=>lanzar(n); $('btns').appendChild(b); });
+}
+
+async function resolver(token){
+  if(!ok(token)){ log('? "'+token+'" no es un átomo válido.','no'); return []; }
+  log('?- ejecutar('+token+', A, P).','q');
+  const r = await solveAll('ejecutar('+token+', A, P).');
+  if(r.out.length){
+    const a=r.out[0]; const A=val(a.lookup('A')), P=val(a.lookup('P'));
+    log('   A = '+A+', P = '+P,'ok'); return [{A,P,nombre:token}];
+  }
+  log('?- paso('+token+', N, C).','q');
+  const s = await solveAll('paso('+token+', N, C).');
+  if(!s.out.length){ log('   false. No reconozco "'+token+'".','no'); return []; }
+  const pasos = s.out.map(a=>({n:val(a.lookup('N')),c:val(a.lookup('C'))})).sort((p,q)=>p.n-q.n);
+  log('   Rutina con '+pasos.length+' pasos: '+pasos.map(p=>p.c).join(' → '),'ok');
+  let acc=[]; for(const p of pasos){ acc=acc.concat(await resolver(p.c)); } return acc;
+}
+
+function lanzar(texto){
+  queue = queue.then(async()=>{
+    const tokens = texto.toLowerCase().split(/[\s,;]+/).filter(Boolean);
+    for(const t of tokens){
+      const lista = await resolver(t);
+      for(const ac of lista) await animar(ac.A, ac.P);
+    }
+  });
+}
+
+const wait = ms => new Promise(r=>setTimeout(r,ms));
+const anim = (el,kf,o) => el.animate(kf,Object.assign({fill:'none',easing:'ease-in-out'},o)).finished;
+async function animar(A,P){
+  const R=$('robot');
+  if(sleeping && A!=='dormir'){ log('   (el robot duerme: usa "despertar")','no'); return; }
+  const max = ($('stage').clientWidth-140)/2;
+  switch(A){
+    case 'mover': {
+      const nx=Math.max(-max,Math.min(max,x+P)); const dir=nx>=x?1:-1;
+      R.style.transition='transform .6s ease-in-out'; R.style.transform='translateX('+nx+'px)'; x=nx;
+      anim($('body'),[{transform:'rotate(0)'},{transform:'rotate('+(4*dir)+'deg)'},{transform:'rotate(0)'}],{duration:600});
+      await wait(620); break; }
+    case 'saltar':
+      await anim(R,[{transform:'translate('+x+'px,0)'},{transform:'translate('+x+'px,'+(-P)+'px)'},{transform:'translate('+x+'px,0)'}],{duration:700,easing:'cubic-bezier(.3,.6,.4,1)'}); break;
+    case 'saludar': {
+      const f=[]; for(let i=0;i<P;i++){f.push({transform:'rotate(-150deg)'},{transform:'rotate(-110deg)'}); }
+      await anim($('armR'),[{transform:'rotate(0)'},...f,{transform:'rotate(0)'}],{duration:250*P+400}); break; }
+    case 'bailar': {
+      const f=[]; for(let i=0;i<P;i++){f.push({transform:'rotate(-8deg)'},{transform:'rotate(8deg)'});}
+      anim($('armL'),[{transform:'rotate(0)'},{transform:'rotate(-120deg)'},{transform:'rotate(-40deg)'},{transform:'rotate(-120deg)'},{transform:'rotate(0)'}],{duration:300*P});
+      anim($('armR'),[{transform:'rotate(0)'},{transform:'rotate(120deg)'},{transform:'rotate(40deg)'},{transform:'rotate(120deg)'},{transform:'rotate(0)'}],{duration:300*P});
+      await anim($('body'),[{transform:'rotate(0)'},...f,{transform:'rotate(0)'}],{duration:300*P});
+      break; }
+    case 'girar_cabeza':
+      await anim($('head'),[{transform:'rotate(0)'},{transform:'rotate('+P+'deg)'},{transform:'rotate('+(-P)+'deg)'},{transform:'rotate(0)'}],{duration:900}); break;
+    case 'parpadear': {
+      const f=[]; for(let i=0;i<P;i++){f.push({transform:'scaleY(.1)'},{transform:'scaleY(1)'});}
+      await anim($('eyes'),f,{duration:250*P}); break; }
+    case 'luz':
+      $('bulb').setAttribute('fill', P? '#f5c542':'#59627a');
+      $('bulb').style.filter = P? 'drop-shadow(0 0 8px #f5c542)':'none'; await wait(300); break;
+    case 'dormir':
+      sleeping = !!P; $('eyes').style.transform = P?'scaleY(.1)':'scaleY(1)';
+      $('head').style.transition='transform .5s'; $('head').style.transform = P?'rotate(12deg)':'rotate(0)';
+      const z=$('zzz'); z.style.left='calc(50% + '+(x+30)+'px)';
+      if(P){ z.animate([{opacity:0,transform:'translateY(10px)'},{opacity:1,transform:'translateY(-10px)'}],{duration:1200,fill:'forwards'}); }
+      else { z.getAnimations().forEach(a=>a.cancel()); z.style.opacity=0; }
+      await wait(600); break;
+    default: log('   Acción "'+A+'" sin animación definida.','no');
+  }
+}
+
+$('go').onclick=()=>{ const v=$('cmd').value.trim(); if(v){ lanzar(v); $('cmd').value=''; } };
+$('cmd').addEventListener('keydown',e=>{ if(e.key==='Enter') $('go').click(); });
+$('reload').onclick=async()=>{ if(await cargar()) construirBotones(); };
+$('reset').onclick=async()=>{ $('prog').value=PROGRAMA; if(await cargar()) construirBotones(); };
+
+$('prog').value=PROGRAMA;
+window.addEventListener('load', async()=>{ if(await cargar()) construirBotones(); });
+</script>
+</body>
+</html>
